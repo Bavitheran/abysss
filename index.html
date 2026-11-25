@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090909" />
+  <meta name="description" content="A private trading journal with individual trader accounts." />
+  <title>The Abbys — Trading Journal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="auth-screen" class="auth-screen hidden"></main>
+  <div id="app-shell" class="app-shell hidden">
+    <header class="topbar">
+      <a class="brand" href="#dashboard" aria-label="The Abbys home"><span class="brand-mark">◉</span><span>The Abbys</span></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-item active" data-page="dashboard">Dashboard</button>
+        <button class="nav-item" data-page="journal">Journal</button>
+        <button class="nav-item" data-page="calendar">Calendar</button>
+        <button class="nav-item" data-page="reviews">Reviews</button>
+      </nav>
+      <div class="top-actions">
+        <span id="user-label" class="user-label"></span>
+        <label class="sr-only" for="account-select">Active account</label>
+        <select id="account-select" class="account-select"></select>
+        <button id="add-account-top" class="icon-button" aria-label="Add account" title="Add account">＋</button>
+        <button id="settings-top" class="icon-button settings-button" aria-label="Settings" title="Settings">⚙</button>
+        <button id="logout-top" class="icon-button settings-button" aria-label="Sign out" title="Sign out">↪</button>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content"></main>
+
+    <footer class="privacy-footer"><span class="privacy-dot"></span> Your records are private to your account <span class="footer-divider">·</span><button id="sync-status" class="text-button sync-status">Connecting to database…</button><span class="footer-divider">·</span><button id="export-footer" class="text-button">Export backup</button></footer>
+  </div>
+
+  <dialog id="trade-dialog" class="dialog wide-dialog">
+    <form id="trade-form" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">TRADE JOURNAL</p><h2 id="trade-dialog-title">Log a trade</h2><p class="subtle">Capture the result now. Add the deeper review when you have time.</p></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <input type="hidden" id="trade-id" />
+      <div class="form-grid">
+        <section class="form-card span-2">
+          <div class="field-row"><label for="trade-instrument">Instrument</label><label for="trade-date">Trade date</label></div>
+          <div class="field-row"><input id="trade-instrument" required placeholder="e.g. ES, NQ, AAPL" maxlength="24" /><input id="trade-date" type="date" required /></div>
+          <div class="field-label">Direction</div>
+          <div class="segmented direction-toggle"><button type="button" data-side="Long" class="selected">↗ Long</button><button type="button" data-side="Short">↘ Short</button></div>
+        </section>
+        <section class="form-card span-2">
+          <div class="card-heading"><div><h3>Result</h3><p>Enter the trade result before fees.</p></div><span id="result-preview" class="result-preview">$0.00</span></div>
+          <div class="field-row result-fields"><label>Gross P&amp;L<input id="trade-pnl" type="number" step="0.01" placeholder="0.00" required /></label><label>Fees<input id="trade-fees" type="number" min="0" step="0.01" placeholder="0.00" /></label><label>Points<input id="trade-points" type="number" step="0.01" placeholder="optional" /></label></div>
+          <div class="field-label">Quick result from 1R</div>
+          <div class="quick-results"><button type="button" data-r="3">+3R</button><button type="button" data-r="2">+2R</button><button type="button" data-r="1">+1R</button><button type="button" data-r="0">BE</button><button type="button" data-r="-0.5">−0.5R</button><button type="button" data-r="-1">−1R</button></div>
+        </section>
+        <section class="form-card">
+          <div class="card-heading"><div><h3>Risk</h3><p>Used to calculate R multiple.</p></div></div>
+          <label>Planned risk <span class="input-suffix" id="risk-currency">$</span><input id="trade-risk" type="number" min="0" step="0.01" placeholder="0.00" /></label>
+          <label>Quantity / contracts<input id="trade-quantity" type="number" min="0" step="1" placeholder="optional" /></label>
+        </section>
+        <section class="form-card">
+          <div class="card-heading"><div><h3>Timing</h3><p>Times use your device timezone.</p></div></div>
+          <div class="field-row"><label>Entry<input id="trade-entry" type="time" /></label><label>Exit<input id="trade-exit" type="time" /></label></div>
+          <label>Session<select id="trade-session"><option value="">Select session</option><option>Pre-market</option><option>London</option><option>New York AM</option><option>New York PM</option><option>Asia</option><option>Swing</option><option>Other</option></select></label>
+        </section>
+        <section class="form-card span-2">
+          <div class="field-row"><label>Setup / strategy<input id="trade-strategy" placeholder="e.g. Breakout retest" maxlength="60" /></label><label>Grade<select id="trade-grade"><option value="">No grade</option><option>A</option><option>B</option><option>C</option><option>D</option></select></label></div>
+          <label>Chart link <span class="subtle inline-note">optional</span><input id="trade-chart" type="url" placeholder="https://…" /></label>
+          <div class="field-label chart-upload-label">Chart screenshot <span class="subtle inline-note">optional · saved privately with this trade</span></div>
+          <input id="chart-file" class="hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+          <div id="chart-drop" class="chart-drop" role="button" tabindex="0" aria-label="Upload a chart screenshot">
+            <span class="chart-upload-icon">↥</span>
+            <span class="chart-upload-copy"><strong>Choose or drop a chart image</strong><span>PNG, JPG, WEBP · compressed for private storage</span></span>
+            <span class="chart-upload-action">Browse</span>
+          </div>
+          <div id="chart-preview" class="chart-preview hidden">
+            <img id="chart-preview-image" alt="Uploaded trade chart preview" />
+            <div class="chart-preview-meta"><span id="chart-preview-name"></span><div class="chart-preview-actions"><button type="button" id="chart-replace" class="text-button">Replace</button><button type="button" id="chart-remove" class="text-button">Remove</button></div></div>
+          </div>
+          <label>Journal note<textarea id="trade-note" rows="3" placeholder="What was the plan? What did you learn?" maxlength="1000"></textarea></label>
+          <label class="check-label"><input id="trade-followed-rules" type="checkbox" checked /><span>I followed my plan and rules</span></label>
+        </section>
+      </div>
+      <div class="dialog-actions"><button type="button" id="delete-trade" class="button danger-button hidden">Delete trade</button><span class="action-spacer"></span><button type="button" class="button secondary close-dialog">Cancel</button><button type="submit" id="save-trade-button" class="button primary">Save trade</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="account-dialog" class="dialog">
+    <form id="account-form" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">ACCOUNT SETUP</p><h2 id="account-dialog-title">Add an account</h2><p class="subtle">Set the limits you want this journal to track.</p></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <input type="hidden" id="account-id" />
+      <div class="settings-grid">
+        <label class="full-field">Account name<input id="account-name" required placeholder="e.g. Personal Futures" maxlength="50" /></label>
+        <label>Type<select id="account-type"><option>Personal</option><option>Evaluation</option><option>Funded</option><option>Paper</option></select></label>
+        <label>Currency<select id="account-currency"><option value="USD">USD — $</option><option value="INR">INR — ₹</option><option value="EUR">EUR — €</option><option value="GBP">GBP — £</option><option value="CAD">CAD — $</option><option value="AUD">AUD — $</option></select></label>
+        <label>Starting balance<input id="account-balance" type="number" step="0.01" placeholder="50000" /></label>
+        <label>Profit target<input id="account-target" type="number" min="0" step="0.01" placeholder="3000" /></label>
+        <label>Max total loss<input id="account-max-loss" type="number" min="0" step="0.01" placeholder="2000" /></label>
+        <label>Daily loss limit<input id="account-daily-loss" type="number" min="0" step="0.01" placeholder="250" /></label>
+        <label>Max trades per day<input id="account-max-trades" type="number" min="0" step="1" placeholder="2" /></label>
+        <label>Stop after losses<input id="account-max-losses" type="number" min="0" step="1" placeholder="2" /></label>
+      </div>
+      <p class="settings-hint">Limits are reminders for your personal journal. They do not connect to a broker or block orders.</p>
+      <div class="dialog-actions"><span class="action-spacer"></span><button type="button" class="button secondary close-dialog">Cancel</button><button type="submit" class="button primary">Save account</button></div>
+    </form>
+  </dialog>
+
+  <input id="import-file" class="hidden" type="file" accept="application/json,.json" />
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
